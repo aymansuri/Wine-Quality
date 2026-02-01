@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.555">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Wine Quality Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Draft_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Draft_files/libs/quarto-html/quarto.js"></script>
+<script src="Draft_files/libs/quarto-html/popper.min.js"></script>
+<script src="Draft_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Draft_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Draft_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Draft_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Draft_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Draft_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Draft_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Wine Quality Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell" data-fold="true">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Read in the dataset</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>wine_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"Wine datasets/winequality-white.csv"</span>, <span class="at">sep=</span><span class="st">";"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>num_observations <span class="ot">&lt;-</span> <span class="fu">nrow</span>(wine_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="introduction-and-data-overview" class="level1">
+<h1>Introduction and Data Overview</h1>
+<section id="project-introduction" class="level2">
+<h2 class="anchored" data-anchor-id="project-introduction">Project Introduction</h2>
+<p>This analysis aims to investigate the factors influencing the quality of <strong>white wine</strong> by examining various chemical properties. The goal is to identify the characteristics most strongly associated with higher quality ratings, which can provide insights into optimizing wine production.</p>
+</section>
+<section id="dataset-overview" class="level2">
+<h2 class="anchored" data-anchor-id="dataset-overview">Dataset Overview</h2>
+<p>The dataset contains 4898 observations of <strong>white wine</strong> samples, with measurements for several chemical properties. The full list of variables includes:</p>
+<ul>
+<li><strong>Fixed Acidity</strong></li>
+<li><strong>Volatile Acidity</strong></li>
+<li>Citric Acid</li>
+<li><strong>Residual Sugar</strong></li>
+<li>Chlorides</li>
+<li><strong>Free Sulfur Dioxide</strong></li>
+<li>Total Sulfur Dioxide</li>
+<li><strong>Density</strong></li>
+<li><strong>pH</strong></li>
+<li><strong>Sulphates</strong></li>
+<li><strong>Alcohol</strong></li>
+<li><strong><code>Quality Rating</code></strong>(target variable)</li>
+</ul>
+<p>Through model selection tests(described in later sections), several <strong>key variables</strong> are identified and marked in <strong>bold text</strong>.</p>
+</section>
+<section id="initial-exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="initial-exploratory-data-analysis">Initial Exploratory Data Analysis</h2>
+<section id="visualization-of-quality-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="visualization-of-quality-distribution">Visualization of quality distribution</h3>
+<p>To begin the analysis, we first visualized the distribution of the dependent variable quality. To accurately interpret and analyse the target variable, one needs to understand its spread and central tendency.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wine_data, <span class="fu">aes</span>(<span class="at">x =</span> quality)) <span class="sc">+</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">y=</span> ..count..), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Wine Quality"</span>, <span class="at">x =</span> <span class="st">"Quality"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="correlation-matrix-of-all-features" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-matrix-of-all-features">Correlation Matrix of All Features</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Correlation matrix</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(wine_data[, <span class="fu">sapply</span>(wine_data, is.numeric)])</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix, <span class="at">method =</span> <span class="st">"color"</span>, <span class="at">type =</span> <span class="st">"upper"</span>, <span class="at">tl.cex =</span> <span class="fl">0.7</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="correlation-of-features-with-wine-quality" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-of-features-with-wine-quality">Correlation of Features with Wine Quality</h3>
+<p>The following bar chart shows the correlation of each chemical property with the wine quality. This analysis highlights which features are more strongly associated with the quality rating, indicating their potential importance in predicting wine quality.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate correlations with the quality variable</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>cor_with_quality <span class="ot">&lt;-</span> wine_data <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>quality) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">cor</span>(., wine_data<span class="sc">$</span>quality, <span class="at">use =</span> <span class="st">"complete.obs"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"Variable"</span>, <span class="at">values_to =</span> <span class="st">"Correlation"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot correlations with quality</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cor_with_quality, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Variable, Correlation), <span class="at">y =</span> Correlation)) <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Correlation of Wine Chemical Properties with Quality Rating"</span>, </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Chemical Property"</span>, </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Correlation with Quality"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Variables such as <strong>alcohol content</strong> and <strong>density</strong> have strong correlations with quality, while cirtic acid and free sulphur dioxide have little correlation.</p>
+<p>We will take a brief look at alcohol content here. A box plot is used to visualize the distribution of alcohol content across different quality ratings.</p>
+</section>
+<section id="box-plot-for-alcohol-content-by-quality" class="level3">
+<h3 class="anchored" data-anchor-id="box-plot-for-alcohol-content-by-quality">Box plot for Alcohol Content by Quality</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wine_data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">factor</span>(quality), <span class="at">y =</span> alcohol)) <span class="sc">+</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Box Plot of Alcohol Content by Wine Quality"</span>, <span class="at">x =</span> <span class="st">"Quality"</span> , <span class="at">y =</span> <span class="st">"Alcohol Content"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Wines with higher quality incline to have higher alcohol content, and the variability in alcohol content decreases as quality increases.</p>
+</section>
+</section>
+<section id="data-preprocessing" class="level2">
+<h2 class="anchored" data-anchor-id="data-preprocessing">Data Preprocessing</h2>
+<section id="data-cleaning" class="level3">
+<h3 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for missing values</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>missing_values <span class="ot">&lt;-</span> <span class="fu">colSums</span>(<span class="fu">is.na</span>(wine_data))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of missing values in each column:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(missing_values)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Detect outliers using the Interquartile Range (IQR) method</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>identify_outliers <span class="ot">&lt;-</span> <span class="cf">function</span>(column) {</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  Q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(column, <span class="fl">0.25</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  Q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(column, <span class="fl">0.75</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  IQR <span class="ot">&lt;-</span> Q3 <span class="sc">-</span> Q1</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  lower_bound <span class="ot">&lt;-</span> Q1 <span class="sc">-</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  upper_bound <span class="ot">&lt;-</span> Q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> IQR</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(column <span class="sc">&lt;</span> lower_bound <span class="sc">|</span> column <span class="sc">&gt;</span> upper_bound, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>outlier_counts <span class="ot">&lt;-</span> <span class="fu">sapply</span>(wine_data[, <span class="fu">sapply</span>(wine_data, is.numeric)], identify_outliers)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Number of outliers in each numeric column:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(outlier_counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The dataset is nicely formatted and does not contain any missing values. However, several features exhibit a significant number of outliers(according to the IQR method), as visualized in the boxplot below.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List of columns with many outliers</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>columns_with_outliers <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"fixed.acidity"</span>, <span class="st">"volatile.acidity"</span>, <span class="st">"citric.acid"</span>, </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"chlorides"</span>, <span class="st">"sulphates"</span>, <span class="st">"quality"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot boxplots for these columns</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>wine_data_long <span class="ot">&lt;-</span> wine_data <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">all_of</span>(columns_with_outliers)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"Variable"</span>, <span class="at">values_to =</span> <span class="st">"Value"</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create boxplots to visualize outliers</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(wine_data_long, <span class="fu">aes</span>(<span class="at">x =</span> Variable, <span class="at">y =</span> Value)) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">outlier.color =</span> <span class="st">"red"</span>, <span class="at">outlier.shape =</span> <span class="dv">16</span>) <span class="sc">+</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Boxplots of Features with Many Outliers"</span>, </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Chemical Property"</span>, </span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Value"</span>) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Outliers can affect the accuracy of regression analysis models. However, in this case, the data represents chemical properties in alcohol, where extreme values are expected and can provide valuable insights. Additionally, the number of outliers is relatively small compared to the total dataset (~200 out of ~5000), so we have decided to keep them as meaningful observations.</p>
+</section>
+<section id="feature-engineering" class="level3">
+<h3 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h3>
+<p>For this analysis, we did not create any new variables because the existing chemical properties already provide a comprehensive view of the data.</p>
+</section>
+<section id="data-preparation-for-regression-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="data-preparation-for-regression-analysis">Data Preparation for Regression Analysis</h3>
+<div class="cell" data-fold="true">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize all numeric features (mean = 0, standard deviation = 1)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>numeric_vars <span class="ot">&lt;-</span> wine_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>wine_data_normalised <span class="ot">&lt;-</span> wine_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_vars), scale))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>To prepare the data for regression modeling, we <strong>normalized</strong> the data:</p>
+<ul>
+<li>All numeric features were standardized to have a mean of 0 and a standard deviation of 1. This step ensures that all variables are on the same scale, which is important for regression models that are sensitive to feature scaling.</li>
+<li>A cross-validation will be performed later to help mitigate potential overfitting.</li>
+</ul>
+</section>
+</section>
+<section id="model-selection-and-justification" class="level2">
+<h2 class="anchored" data-anchor-id="model-selection-and-justification">Model Selection and Justification</h2>
+<p>This analysis uses a <strong>multiple linear regression model</strong> to predict wine quality a number of predictor variables. We aim to quantify the simultaneous impact of both predictors on the response variable (white wine quality).</p>
+<p>To determine which predictor variables are suitable for our model, we will perform three tests - an exhaustive search, backwards selection using AIC criterion and forwards selection using AIC criterion. We will then compare the results from these three searches and build our final model, which will then be tested using cross validation to assess the performance and fit of the model.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load necessary libraries</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit the linear model</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">lm</span>(quality <span class="sc">~</span> ., <span class="at">data =</span> wine_data_normalised)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of the model</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = quality ~ ., data = wine_data_normalised)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.3299 -0.5571 -0.0428  0.5235  3.5164 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          -3.668e-15  1.212e-02   0.000  1.00000    
+fixed.acidity         6.243e-02  1.989e-02   3.139  0.00171 ** 
+volatile.acidity     -2.120e-01  1.295e-02 -16.373  &lt; 2e-16 ***
+citric.acid           3.019e-03  1.309e-02   0.231  0.81759    
+residual.sugar        4.667e-01  4.311e-02  10.825  &lt; 2e-16 ***
+chlorides            -6.100e-03  1.348e-02  -0.452  0.65097    
+free.sulfur.dioxide   7.168e-02  1.621e-02   4.422 9.99e-06 ***
+total.sulfur.dioxide -1.371e-02  1.814e-02  -0.756  0.44979    
+density              -5.075e-01  6.442e-02  -7.879 4.04e-15 ***
+pH                    1.170e-01  1.797e-02   6.513 8.10e-11 ***
+sulphates             8.137e-02  1.294e-02   6.291 3.44e-10 ***
+alcohol               2.688e-01  3.366e-02   7.988 1.70e-15 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.8484 on 4886 degrees of freedom
+Multiple R-squared:  0.2819,    Adjusted R-squared:  0.2803 
+F-statistic: 174.3 on 11 and 4886 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<section id="exhaustive-search" class="level3">
+<h3 class="anchored" data-anchor-id="exhaustive-search">Exhaustive Search</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load necessary libraries</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(leaps)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform exhaustive search</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>full_model <span class="ot">&lt;-</span> <span class="fu">regsubsets</span>(quality <span class="sc">~</span> ., <span class="at">data =</span> wine_data_normalised, <span class="at">nbest =</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="st">"exhaustive"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get summary of results</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">summary</span>(full_model)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Display adjusted R-squared values</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(results<span class="sc">$</span>adjr2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1895598 0.2399208 0.2580716 0.2633925 0.2703282 0.2757705 0.2790891
+[8] 0.2805767</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select the best model based on adjusted R-squared</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>best_model_index <span class="ot">&lt;-</span> <span class="fu">which.max</span>(results<span class="sc">$</span>adjr2)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>best_model <span class="ot">&lt;-</span> results<span class="sc">$</span>which[best_model_index, ]</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Display best model</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>         (Intercept)        fixed.acidity     volatile.acidity 
+                TRUE                 TRUE                 TRUE 
+         citric.acid       residual.sugar            chlorides 
+               FALSE                 TRUE                FALSE 
+ free.sulfur.dioxide total.sulfur.dioxide              density 
+                TRUE                FALSE                 TRUE 
+                  pH            sulphates              alcohol 
+                TRUE                 TRUE                 TRUE </code></pre>
+</div>
+</div>
+</section>
+<section id="backward-selection" class="level3">
+<h3 class="anchored" data-anchor-id="backward-selection">Backward selection</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>step.back.aic <span class="ot">=</span> <span class="fu">step</span>(model, <span class="at">direction =</span> <span class="st">"backward"</span>,</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trace =</span> <span class="cn">TRUE</span>)  <span class="co">#Backward selection</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=-1598.75
+quality ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + 
+    chlorides + free.sulfur.dioxide + total.sulfur.dioxide + 
+    density + pH + sulphates + alcohol
+
+                       Df Sum of Sq    RSS     AIC
+- citric.acid           1     0.038 3516.7 -1600.7
+- chlorides             1     0.147 3516.8 -1600.5
+- total.sulfur.dioxide  1     0.411 3517.1 -1600.2
+&lt;none&gt;                              3516.7 -1598.8
+- fixed.acidity         1     7.091 3523.8 -1590.9
+- free.sulfur.dioxide   1    14.074 3530.8 -1581.2
+- sulphates             1    28.481 3545.2 -1561.2
+- pH                    1    30.532 3547.2 -1558.4
+- density               1    44.679 3561.4 -1538.9
+- alcohol               1    45.924 3562.6 -1537.2
+- residual.sugar        1    84.339 3601.0 -1484.7
+- volatile.acidity      1   192.954 3709.6 -1339.1
+
+Step:  AIC=-1600.7
+quality ~ fixed.acidity + volatile.acidity + residual.sugar + 
+    chlorides + free.sulfur.dioxide + total.sulfur.dioxide + 
+    density + pH + sulphates + alcohol
+
+                       Df Sum of Sq    RSS     AIC
+- chlorides             1     0.133 3516.9 -1602.5
+- total.sulfur.dioxide  1     0.402 3517.1 -1602.1
+&lt;none&gt;                              3516.7 -1600.7
+- fixed.acidity         1     7.330 3524.0 -1592.5
+- free.sulfur.dioxide   1    14.146 3530.9 -1583.0
+- sulphates             1    28.614 3545.3 -1563.0
+- pH                    1    30.562 3547.3 -1560.3
+- density               1    44.706 3561.4 -1540.8
+- alcohol               1    46.586 3563.3 -1538.2
+- residual.sugar        1    84.349 3601.1 -1486.6
+- volatile.acidity      1   199.916 3716.6 -1331.9
+
+Step:  AIC=-1602.51
+quality ~ fixed.acidity + volatile.acidity + residual.sugar + 
+    free.sulfur.dioxide + total.sulfur.dioxide + density + pH + 
+    sulphates + alcohol
+
+                       Df Sum of Sq    RSS     AIC
+- total.sulfur.dioxide  1     0.408 3517.3 -1604.0
+&lt;none&gt;                              3516.9 -1602.5
+- fixed.acidity         1     7.850 3524.7 -1593.6
+- free.sulfur.dioxide   1    14.070 3530.9 -1585.0
+- sulphates             1    28.776 3545.6 -1564.6
+- pH                    1    32.252 3549.1 -1559.8
+- alcohol               1    46.581 3563.4 -1540.1
+- density               1    46.947 3563.8 -1539.6
+- residual.sugar        1    89.416 3606.3 -1481.5
+- volatile.acidity      1   202.131 3719.0 -1330.8
+
+Step:  AIC=-1603.95
+quality ~ fixed.acidity + volatile.acidity + residual.sugar + 
+    free.sulfur.dioxide + density + pH + sulphates + alcohol
+
+                      Df Sum of Sq    RSS     AIC
+&lt;none&gt;                             3517.3 -1604.0
+- fixed.acidity        1     7.994 3525.3 -1594.8
+- free.sulfur.dioxide  1    17.627 3534.9 -1581.5
+- sulphates            1    28.435 3545.7 -1566.5
+- pH                   1    32.459 3549.7 -1561.0
+- alcohol              1    46.280 3563.5 -1541.9
+- density              1    50.896 3568.2 -1535.6
+- residual.sugar       1    92.997 3610.3 -1478.1
+- volatile.acidity     1   213.874 3731.1 -1316.8</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(step.back.aic)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = quality ~ fixed.acidity + volatile.acidity + residual.sugar + 
+    free.sulfur.dioxide + density + pH + sulphates + alcohol, 
+    data = wine_data_normalised)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.3185 -0.5576 -0.0447  0.5262  3.5237 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         -3.753e-15  1.212e-02   0.000 1.000000    
+fixed.acidity        6.489e-02  1.947e-02   3.333 0.000864 ***
+volatile.acidity    -2.149e-01  1.246e-02 -17.242  &lt; 2e-16 ***
+residual.sugar       4.745e-01  4.173e-02  11.370  &lt; 2e-16 ***
+free.sulfur.dioxide  6.431e-02  1.299e-02   4.950 7.67e-07 ***
+density             -5.211e-01  6.195e-02  -8.411  &lt; 2e-16 ***
+pH                   1.184e-01  1.762e-02   6.717 2.07e-11 ***
+sulphates            8.099e-02  1.288e-02   6.287 3.52e-10 ***
+alcohol              2.684e-01  3.346e-02   8.021 1.31e-15 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.8482 on 4889 degrees of freedom
+Multiple R-squared:  0.2818,    Adjusted R-squared:  0.2806 
+F-statistic: 239.7 on 8 and 4889 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="forward-selection" class="level3">
+<h3 class="anchored" data-anchor-id="forward-selection">Forward selection</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full model (with all predictors)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>full_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(quality <span class="sc">~</span> ., <span class="at">data =</span> wine_data_normalised)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Empty model (just the intercept)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>empty_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(quality <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> wine_data_normalised)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform forward selection</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>forward_model <span class="ot">&lt;-</span> <span class="fu">step</span>(empty_model, </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>                      <span class="at">scope =</span> <span class="fu">list</span>(<span class="at">lower =</span> empty_model, <span class="at">upper =</span> full_model),</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">direction =</span> <span class="st">"forward"</span>, <span class="at">trace =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=1
+quality ~ 1
+
+                       Df Sum of Sq    RSS      AIC
++ alcohol               1    929.08 3967.9 -1027.45
++ density               1    461.91 4435.1  -482.27
++ chlorides             1    215.82 4681.2  -217.77
++ volatile.acidity      1    185.68 4711.3  -186.33
++ total.sulfur.dioxide  1    149.52 4747.5  -148.88
++ fixed.acidity         1     63.27 4833.7   -60.69
++ pH                    1     48.41 4848.6   -45.66
++ residual.sugar        1     46.63 4850.4   -43.86
++ sulphates             1     14.11 4882.9   -11.13
+&lt;none&gt;                              4897.0     1.00
++ citric.acid           1      0.42 4896.6     2.58
++ free.sulfur.dioxide   1      0.33 4896.7     2.67
+
+Step:  AIC=-1027.45
+quality ~ alcohol
+
+                       Df Sum of Sq    RSS     AIC
++ volatile.acidity      1   247.327 3720.6 -1340.7
++ free.sulfur.dioxide   1    71.627 3896.3 -1114.7
++ residual.sugar        1    59.869 3908.0 -1099.9
++ fixed.acidity         1    18.498 3949.4 -1048.3
++ sulphates             1    18.390 3949.5 -1048.2
++ chlorides             1    15.833 3952.1 -1045.0
++ density               1    13.367 3954.5 -1042.0
++ pH                    1    10.763 3957.2 -1038.8
++ citric.acid           1     2.784 3965.1 -1028.9
++ total.sulfur.dioxide  1     2.650 3965.3 -1028.7
+&lt;none&gt;                              3967.9 -1027.5
+
+Step:  AIC=-1340.68
+quality ~ alcohol + volatile.acidity
+
+                       Df Sum of Sq    RSS     AIC
++ residual.sugar        1    89.590 3631.0 -1458.1
++ free.sulfur.dioxide   1    51.615 3669.0 -1407.1
++ density               1    32.688 3687.9 -1381.9
++ fixed.acidity         1    20.538 3700.1 -1365.8
++ total.sulfur.dioxide  1    14.235 3706.4 -1357.5
++ sulphates             1    14.032 3706.6 -1357.2
++ pH                    1     6.998 3713.6 -1347.9
++ chlorides             1     5.703 3714.9 -1346.2
+&lt;none&gt;                              3720.6 -1340.7
++ citric.acid           1     0.384 3720.2 -1339.2
+
+Step:  AIC=-1458.07
+quality ~ alcohol + volatile.acidity + residual.sugar
+
+                       Df Sum of Sq    RSS     AIC
++ free.sulfur.dioxide   1   26.7771 3604.2 -1492.3
++ density               1   26.5274 3604.5 -1492.0
++ fixed.acidity         1   24.2256 3606.8 -1488.9
++ pH                    1   17.2460 3613.8 -1479.4
++ sulphates             1   16.6604 3614.3 -1478.6
++ total.sulfur.dioxide  1    2.4242 3628.6 -1459.3
++ chlorides             1    2.0892 3628.9 -1458.9
++ citric.acid           1    2.0244 3629.0 -1458.8
+&lt;none&gt;                              3631.0 -1458.1
+
+Step:  AIC=-1492.32
+quality ~ alcohol + volatile.acidity + residual.sugar + free.sulfur.dioxide
+
+                       Df Sum of Sq    RSS     AIC
++ density               1   24.2761 3579.9 -1523.4
++ fixed.acidity         1   19.7568 3584.5 -1517.2
++ pH                    1   14.6252 3589.6 -1510.2
++ sulphates             1   14.1361 3590.1 -1509.6
++ total.sulfur.dioxide  1    3.0721 3601.1 -1494.5
++ chlorides             1    2.8274 3601.4 -1494.2
++ citric.acid           1    2.8184 3601.4 -1494.2
+&lt;none&gt;                              3604.2 -1492.3
+
+Step:  AIC=-1523.42
+quality ~ alcohol + volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+    density
+
+                       Df Sum of Sq    RSS     AIC
++ pH                    1   30.5110 3549.4 -1563.3
++ sulphates             1   28.3332 3551.6 -1560.3
++ fixed.acidity         1    5.3085 3574.6 -1528.7
++ chlorides             1    1.8024 3578.1 -1523.9
+&lt;none&gt;                              3579.9 -1523.4
++ citric.acid           1    0.5495 3579.4 -1522.2
++ total.sulfur.dioxide  1    0.1074 3579.8 -1521.6
+
+Step:  AIC=-1563.35
+quality ~ alcohol + volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+    density + pH
+
+                       Df Sum of Sq    RSS     AIC
++ sulphates             1   24.1788 3525.3 -1594.8
++ fixed.acidity         1    3.7379 3545.7 -1566.5
+&lt;none&gt;                              3549.4 -1563.3
++ chlorides             1    0.7112 3548.7 -1562.3
++ citric.acid           1    0.2846 3549.1 -1561.7
++ total.sulfur.dioxide  1    0.1264 3549.3 -1561.5
+
+Step:  AIC=-1594.83
+quality ~ alcohol + volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+    density + pH + sulphates
+
+                       Df Sum of Sq    RSS     AIC
++ fixed.acidity         1    7.9938 3517.3 -1604.0
+&lt;none&gt;                              3525.3 -1594.8
++ chlorides             1    0.6771 3524.6 -1593.8
++ total.sulfur.dioxide  1    0.5518 3524.7 -1593.6
++ citric.acid           1    0.1805 3525.1 -1593.1
+
+Step:  AIC=-1603.95
+quality ~ alcohol + volatile.acidity + residual.sugar + free.sulfur.dioxide + 
+    density + pH + sulphates + fixed.acidity
+
+                       Df Sum of Sq    RSS     AIC
+&lt;none&gt;                              3517.3 -1604.0
++ total.sulfur.dioxide  1   0.40828 3516.9 -1602.5
++ chlorides             1   0.13982 3517.1 -1602.1
++ citric.acid           1   0.01655 3517.2 -1602.0</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(forward_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = quality ~ alcohol + volatile.acidity + residual.sugar + 
+    free.sulfur.dioxide + density + pH + sulphates + fixed.acidity, 
+    data = wine_data_normalised)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.3185 -0.5576 -0.0447  0.5262  3.5237 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         -3.753e-15  1.212e-02   0.000 1.000000    
+alcohol              2.684e-01  3.346e-02   8.021 1.31e-15 ***
+volatile.acidity    -2.149e-01  1.246e-02 -17.242  &lt; 2e-16 ***
+residual.sugar       4.745e-01  4.173e-02  11.370  &lt; 2e-16 ***
+free.sulfur.dioxide  6.431e-02  1.299e-02   4.950 7.67e-07 ***
+density             -5.211e-01  6.195e-02  -8.411  &lt; 2e-16 ***
+pH                   1.184e-01  1.762e-02   6.717 2.07e-11 ***
+sulphates            8.099e-02  1.288e-02   6.287 3.52e-10 ***
+fixed.acidity        6.489e-02  1.947e-02   3.333 0.000864 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.8482 on 4889 degrees of freedom
+Multiple R-squared:  0.2818,    Adjusted R-squared:  0.2806 
+F-statistic: 239.7 on 8 and 4889 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="final-model" class="level3">
+<h3 class="anchored" data-anchor-id="final-model">Final Model</h3>
+<p>Since all three methods came up with the same predictor variables to use, our final model becomes</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>model_final <span class="ot">=</span> <span class="fu">lm</span>(quality <span class="sc">~</span> alcohol <span class="sc">+</span> volatile.acidity <span class="sc">+</span> residual.sugar <span class="sc">+</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    free.sulfur.dioxide <span class="sc">+</span> density <span class="sc">+</span> pH <span class="sc">+</span> sulphates <span class="sc">+</span> fixed.acidity, <span class="at">data =</span> wine_data_normalised)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><span class="math display">\[
+\begin{align*}
+\text{quality} &amp;= \beta_0 + \beta_1\text{alcohol}_i + \beta_2\text{volatile\_acidity}_i +
+\beta_3\text{residual\_sugar}_i + \beta_4\text{free\_sulfur\_dioxide}_i \\
+&amp;\quad + \beta_5\text{density}_i + \beta_6\text{pH}_i + \beta_7\text{sulphates}_i +
+\beta_8\text{fixed\_acidity}_i + \varepsilon_i
+\end{align*}
+\]</span></p>
+</section>
+<section id="cross-validation" class="level3">
+<h3 class="anchored" data-anchor-id="cross-validation">Cross-Validation</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load necessary library</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the cross-validation method (10-fold cross-validation)</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>train_control <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"cv"</span>, <span class="at">number =</span> <span class="dv">10</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Train the model using the selected predictors from backward selection</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">train</span>(quality <span class="sc">~</span> alcohol <span class="sc">+</span> volatile.acidity <span class="sc">+</span> residual.sugar <span class="sc">+</span> </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    free.sulfur.dioxide <span class="sc">+</span> density <span class="sc">+</span> pH <span class="sc">+</span> sulphates <span class="sc">+</span> fixed.acidity, </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> wine_data_normalised, </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">method =</span> <span class="st">"lm"</span>, </span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">trControl =</span> train_control)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the cross-validated model output</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear Regression 
+
+4898 samples
+   8 predictor
+
+No pre-processing
+Resampling: Cross-Validated (10 fold) 
+Summary of sample sizes: 4408, 4408, 4409, 4408, 4409, 4408, ... 
+Resampling results:
+
+  RMSE       Rsquared   MAE      
+  0.8506895  0.2790206  0.6607611
+
+Tuning parameter 'intercept' was held constant at a value of TRUE</code></pre>
+</div>
+</div>
+<p>It is important to take into account these three values - the RMSE and MAE are both indicators of error rates. These values indicate a reasonable degree of prediction accuracy since our response variable quality is measured in whole numbers, however there is still some error that is important to take into account when interpreting results.</p>
+<p>The R-squared value indicates the proportion of variance explained by the model. Our R-squared indicates the model explains around 28% of data variance. This number is fairly low, however since all 3 of our variable selection processes indicated the same predictor variables, we are going to continue on with this model.</p>
+<section id="assumption-checks" class="level4">
+<h4 class="anchored" data-anchor-id="assumption-checks">Assumption Checks</h4>
+<p>To create a linear regression model, we have 4 main assumptions: linearity, homoscedasiticity, normality, and independence. The assumptions of independence is assumed based on the data collection process - based on the nature of the wine quality data, being that it is not time-series based, we assume the errors are independent.</p>
+<p>We can use a series of plots to investigate the other 3 assumptions.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggfortify)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(model_final, <span class="at">which =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Linearity</strong></p>
+<p>We can assess linearity using the residuals vs fitted plot. From this plot we can see the linearity assumptions holds - there are no clear patterns in the way the data points are scattered about the y-axis. Whilst the data points are quite uniformly creating diagonal lines, this can be explained by quality being a discrete variable, which can lead to this data formation.</p>
+<p>This is further seen through the addition of a smoothing line (blue), which remains relatively flat on the plot aside from the very beginning of the data points (where there is an outlier).</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>residuals_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fitted =</span> <span class="fu">fitted</span>(model_final),</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Residuals =</span> <span class="fu">residuals</span>(model_final)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">=</span> <span class="fu">ggplot</span>(residuals_df, <span class="fu">aes</span>(<span class="at">x =</span> Fitted, <span class="at">y =</span> Residuals)) <span class="sc">+</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span>                  <span class="co"># Scatter plot</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span>  <span class="co"># Reference line at y=0</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Residuals vs. Fitted"</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Fitted Values"</span>,</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Residuals"</span>) <span class="sc">+</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, </span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>                 <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> </span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>()</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>p1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Draft_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Homoscedasticity</strong></p>
+<p>Similar to linearity, we can assess homoscedasticity from the residuals vs fitted plot. From this plot we can see that whilst there is a little fanning going on, overall the data points are relatively spread out and thus we can say the assumption of homoscedasticity holds for this model.</p>
+<p><strong>Normality</strong></p>
+<p>We assess the assumption of normality through the QQ-plot from above. As we can see, the data points are pretty consistently following the line, and thus we can conclude the data follows a normal distribution.</p>
+</section>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>To reiterate, our final model selection is:</p>
+<p><span class="math display">\[
+\begin{align*}
+\text{quality} &amp;= \beta_0 + \beta_1\text{alcohol}_i + \beta_2\text{volatile\_acidity}_i +
+\beta_3\text{residual\_sugar}_i + \beta_4\text{free\_sulfur\_dioxide}_i \\
+&amp;\quad + \beta_5\text{density}_i + \beta_6\text{pH}_i + \beta_7\text{sulphates}_i +
+\beta_8\text{fixed\_acidity}_i + \varepsilon_i
+\end{align*}
+\]</span></p>
+<p>We can gather our coefficients (<span class="math inline">\(\beta_j\)</span>’s) using our model summary:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_final)<span class="sc">$</span>coefficients <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)            0.000      0.012   0.000    1.000
+alcohol                0.268      0.033   8.021    0.000
+volatile.acidity      -0.215      0.012 -17.242    0.000
+residual.sugar         0.474      0.042  11.370    0.000
+free.sulfur.dioxide    0.064      0.013   4.950    0.000
+density               -0.521      0.062  -8.411    0.000
+pH                     0.118      0.018   6.717    0.000
+sulphates              0.081      0.013   6.287    0.000
+fixed.acidity          0.065      0.019   3.333    0.001</code></pre>
+</div>
+</div>
+<p>These coefficients give us our prediction formula:</p>
+<p><span class="math display">\[
+\begin{align*}
+\text{quality} &amp;= 0 + 0.268\text{alcohol} - 0.215\text{volatile\_acidity} +
+0.474\text{residual\_sugar} + 0.064\text{free\_sulfur\_dioxide} \\
+&amp;\quad - 0.521\text{density} + 0.118\text{pH} + 0.081\text{sulphates} +
+0.065\text{fixed\_acidity}
+\end{align*}
+\]</span></p>
+<p>From this formula, we can conclude:</p>
+<ul>
+<li>The intercept term is 0, meaning when all variables are at their mean values the expected value of quality is 0<br>
+</li>
+<li>For every 1 standard deviation in <strong>alcohol content</strong> there is expected to be a 0.268 increase in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>volatile acidity</strong> there is expected to be a 0.215 decrease in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>residual sugar</strong> there is expected to be a 0.474 increase in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>free sulfur dioxide</strong> there is expected to be a 0.064 increase in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>density</strong> there is expected to be a 0.531 decrease in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>pH</strong> there is expected to be a 0.118 increase in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>sulphate contents</strong> there is expected to be a 0.081 increase in wine quality<br>
+</li>
+<li>For every 1 standard deviation in <strong>fixed acidity</strong> there is expected to be a 0.065 increase in wine quality</li>
+</ul>
+</section>
+</section>
+<section id="discussion" class="level2">
+<h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
+<section id="limitation" class="level3">
+<h3 class="anchored" data-anchor-id="limitation">Limitation</h3>
+<p>A pivotal limitation of this analysis is the relatively low R-squared value (28%), indicating that the model only explains a small portion of the variability in wine quality. This presents that important factors influencing quality—such as sensory attributes (taste, aroma, texture), production methods, or grape characteristics—are not captured in the dataset, which focuses solely on chemical properties. These omitted variables could have a significant impact on wine quality, underscoring the need for more comprehensive data that includes sensory evaluations and environmental factors like terroir and climate conditions.</p>
+<p>Another limitation is the treatment of outliers. While outliers were identified and retained established on their potential relevance in the context of chemical properties, future research could explore alternative methods to handle them. This could include robust regression techniques that minimize their impact on model performance or further investigation into whether these outliers represent errors or genuinely extreme values that merit further investigation.</p>
+<p>Lastly, the cross-validation method used ensures generalisability; however, the performance could be affected by potential overfitting. Expanding the dataset or performing more complex validation techniques, such as nested cross-validation, could provide a more robust assessment.</p>
+</section>
+<section id="innovation-in-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="innovation-in-analysis">Innovation in Analysis</h3>
+<p>This project incorporated a blend of traditional and innovative approaches. In particular, the combination of three model selection methods—exhaustive search, backward selection, and forward selection—demonstrates a comprehensive and innovative approach to identifying the best predictor variables. Each method validated the other, ensuring that the final model was well-supported by multiple selection techniques.</p>
+<p>Additionally, the integration of visual tools such as ggplot2 for data visualization and corrplot for correlation matrix visualization enhanced the clarity and interpretability of the findings. These visual aids not only provide insights into feature relationships but also highlight the role of significant predictors in a more engaging manner.</p>
+<p>Another notable feature of this analysis is the use of cross-validation to ensure the robustness of the final model. By utilizing k-fold cross-validation with a holdout method, the analysis mitigated potential overfitting, ensuring that the model performed well on unseen data.</p>
+</section>
+<section id="future-research" class="level3">
+<h3 class="anchored" data-anchor-id="future-research">Future Research</h3>
+<p>Future research could focus on several avenues to enhance the depth and breadth of the analysis. Expanding the dataset to include more qualitative and sensory attributes, such as taste profiles, aroma, or even expert ratings, could offer a more holistic understanding of the factors influencing wine quality. Including these qualitative features might yield a model with higher predictive power.</p>
+<p>Future research could investigate geographical or vineyard-level factors influencing wine quality, allowing for more region-specific insights. This would be particularly useful for producers seeking to optimize quality based on local environmental conditions.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>In summary, this analysis identified key predictors of white wine quality, with alcohol content, density, and volatile acidity emerging as the most significant factors. The combination of model selection techniques, robust cross-validation, and thoughtful consideration of outliers provided a solid foundation for this analysis, although limitations like the low R-squared value and the absence of qualitative features indicate room for improvement. Despite these limitations, the study offers valuable insights into the chemical properties that influence wine quality and sets the stage for future research to build upon these findings.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
