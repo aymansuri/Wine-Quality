@@ -1,0 +1,663 @@
+---
+title: "DATA2002-A1"
+date: "2024-08-30"
+author: "Student ID: 530644947"
+output: 
+  html_document: 
+    self_contained: true # Creates a single HTML file as output
+    code_folding: hide # Code folding; allows you to show/hide code chunks
+    code_download: true # Includes a menu to download the code file
+    toc: true # (Optional) Creates a table of contents!
+    toc_float: true # table of contents at the side
+    number_sections: true # (Optional) Puts numbers next to heading/subheadings
+---
+
+# Introduction
+
+This report explores key insights from a survey conducted among DATA2X02 students, the aim of this analysis is to explore how certain behaviors and characteristics influence academic performance. To ensure the validity of our findings, the data was thoroughly cleaned to address missing responses and standardize values. Statistical tests were then performed to assess the correlation between these factors and student behavior.
+
+# General Discussion of the Data as a Whole
+
+### Is this a random sample of DATA2X02 students?
+
+The survey data collected in class, which represents responses from DATA2X02 students, cannot be confidently classified as a random sample. This is because a truly random sample would require every student in the DATA2002 and DATA2902 cohorts to have an equal probability of being included in the survey. Given that the total number of students in these courses is 759 (675 in DATA2002 and 84 in DATA2902), and the actual number of respondents is significantly lower, there are clear indications that the sample may not be random. Factors such as voluntary participation, survey timing, and accessibility likely influenced who responded (not everyone may have seen the ed post), leading to a sample that may not fully define the entire student population.
+
+The potential lack of randomness in the selection process introduces a plethora of concerns regarding the generalisability of the determinations. If, for example, more academically committed or technologically adept students were more likely to respond, the data might over-represent these groups and under-represent students who are less engaged or who might face barriers to participation.
+
+### What are the potential biases? Which variables are most likely to be subjected to this bias?
+
+Potential biases refer to any factors that may influence or skew the results or interpretations of a study in an unfair or unrepresentative way.
+
+##### **Social Desirability Bias**
+
+-   **Description:** Social desirability bias materialises when respondents answer questions in a manner they believe will be viewed more favourably by societal standards. This ultimately, leads to the overreporting of "positive" behaviours and the underreporting of "negative" behaviours.
+-   **Affected Variables:**
+    -   **Study Habits:** Respondents might overreport behaviours such as planning and underreport cramming at the last second or reciprocal.
+    -   **Alcohol Consumption or Lifestyle Choices:** Questions about personal habits, such as alcohol consumption or dietary requirements, are prone to this bias, as students may underreport their consumption/requirement to align with perceived societal norms.
+    -   **Participation in Class or Group Work:** Students might magnify or exaggerate their level of participation or their role in group work to appear more responsible or impeccable likewise integrating with social norms.
+
+##### **Non-Response Bias**
+
+-   **Description:** Non-response bias occurs when particular groups of people do not respond to the survey, leading to an unrepresentative sample.
+-   **Affected Variables:**
+    -   **WAM (Weighted Average Mark):** Students with lower WAMs are less likely to respond, the average WAM reported in the survey might be higher in comparison to the true average --\> affecting the conclusion.
+    -   **Age or Year of Study:** If certain demographic groups are underrepresented in the responses, it could lead to biased conclusions about the preferences or behaviours of the entire DATA2X02 cohort.
+    -   **Personal Preferences:** Variables for instance the choice between trimester and semester systems could be skewed if students who are indifferent or less engaged with the academic system choose not to respond.
+
+##### **Self-Selection Bias**
+
+-   **Description:** Self-selection bias occurs when individuals who choose to participate in the survey differ systematically from those who do not. In the case of this survey, students who are more engaged, active (on ed), or have a robust approach to the unit might be more likely to respond, while those who are less engaged or uninterested may ignore.
+-   **Affected Variables:**
+    -   **Final Grade Aiming to Achieve:** Students aiming for higher grades may be overrepresented.
+    -   **Study Habits:** More diligent students who plan their work might be more likely to participate, skewing the data towards more favourable study habits.
+    -   **Preferences for Academic Structures (Trimester vs. Semester):** Students who are more opinionated or informed about the academic calendar may be more inclined to take the survey, leading to a non-representative sample of preferences.
+
+##### **Recall Bias**
+
+-   **Description:** Recall bias occurs when respondents have difficulty accurately remembering past behaviours or experiences, leading to inaccurate or biased responses.
+-   **Affected Variables:**
+    -   **Study Habits and Time Management:** Respondents may not accurately reflect how they managed their time during past assignments, this leads to inconsistencies in their answers.
+    -   **Weekly Habits (e.g., hours spent studying, working, or exercising):** Questions that require respondents to estimate their average behaviour over a period (like the number of hours worked per week) may lead to underestimations or overestimations.
+
+### Which questions needed improvement to generate useful data?
+
+##### **Ambiguity in Open-Ended Questions**
+
+-   **Example:** The question "What is your favourite anime?" led to a significant number of non-responses or irrelevant answers. While open-ended questions can present rich qualitative data, they often suffer from inconsistencies, as respondents may not be entirely certain on how to respond or may skip the question entirely as it may not relate to them.
+-   **Improvement Suggestion:** Transforming this question for example into a multiple-choice format with a list of popular anime titles, along with an "Other" or "None" option where respondents can specify their favourite if it’s not listed or none, would likely increase response rates and yield more uniform data. This system also reduces the cognitive load on respondents, making it easier for them to answer the survey.
+
+##### **Response Validation for Numerical Entries**
+
+-   **Example:** The question "What is your WAM (weighted average mark)?" did not include response validation, leading to probable outliers or inaccurate data entries (e.g., values outside the plausible range of 0 to 100).
+-   **Improvement Suggestion:** Implementing response validation to ensure that entries fall within a logical range (e.g., 0 to 100 for WAM) or even the standard format such that fail, pass, credit, distinction or high distinction (as MCQ) would help in filtering out erroneous data. Additionally, providing context or examples for how to calculate or input their WAM could guide respondents in delivering accurate data.
+
+##### **Sensitive Questions and Social Desirability Bias**
+
+-   **Example:** Questions about personal habits, such as "How much alcohol do you consume each week?" or "Do you tend to lean towards saying "yes" or towards saying "no" to things throughout life?" may be influenced by social desirability bias, where respondents might answer in a way they believe is more socially acceptable rather than truthfully.
+-   **Improvement Suggestion:** Framing these questions non-judgmentally and assuring respondents of anonymity could help mitigate this bias. For instance, providing ranges (e.g., "0-1 drinks," "2-4 drinks," "5+ drinks") instead of asking for specific quantities, or embedding these questions within a broader set of lifestyle questions, might encourage more honest responses.
+
+##### **Cultural Sensitivity**
+
+-   **Example** The question "How many Weet-Bix would you typically eat in one sitting?" assumes all respondents are familiar with Weet-Bix, which may not be the case for a diverse audience like USYD. i.e. respondents who are unfamiliar with this product may skip the question, provide irrelevant answers, or feel excluded from the survey, reducing the overall quality of the data and potentially introducing cultural bias.
+-   **Improvement Suggestion:** Rephrase the question to be more inclusive: "If you eat cereals, how many servings do you typically eat in one sitting?" This ensures the question is relevant to all respondents. Additionally, providing an option for respondents to specify other cereals will make the survey more inclusive and improve data quality.
+
+# Data Wrangling
+
+The raw survey data required careful preparation to ensure that the analysis would yield accurate and reliable insights.([DATA2002. 2024](https://pages.github.sydney.edu.au/DATA2002/2024/assignment/assignment_data.html.))
+
+```{r package-citations, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(hms)
+knitr::write_bib(c(.packages(), "knitr", "rmarkdown"), "~/Desktop/DATA2002/packages.bib")  
+theme_set(theme_bw())
+# taken from HD report
+
+x = readxl::read_excel("~/Desktop/DATA2002/DATA2x02_survey_2024_Responses.xlsx")
+
+old_names = colnames(x)
+
+new_names = c(
+  "timestamp",
+  "target_grade",
+  "assignment_preference",
+  "trimester_or_semester",
+  "age",
+  "tendency_yes_or_no",
+  "pay_rent",
+  "urinal_choice",
+  "stall_choice",
+  "weetbix_count",
+  "weekly_food_spend",
+  "living_arrangements",
+  "weekly_alcohol",
+  "believe_in_aliens",
+  "height",
+  "commute",
+  "daily_anxiety_frequency",
+  "weekly_study_hours",
+  "work_status",
+  "social_media",
+  "gender",
+  "average_daily_sleep",
+  "usual_bedtime",
+  "sleep_schedule",
+  "sibling_count",
+  "allergy_count",
+  "diet_style",
+  "random_number",
+  "favourite_number",
+  "favourite_letter",
+  "drivers_license",
+  "relationship_status",
+  "daily_short_video_time",
+  "computer_os",
+  "steak_preference",
+  "dominant_hand",
+  "enrolled_unit",
+  "weekly_exercise_hours",
+  "weekly_paid_work_hours",
+  "assignments_on_time",
+  "used_r_before",
+  "team_role_type",
+  "university_year",
+  "favourite_anime",
+  "fluent_languages",
+  "readable_languages",
+  "country_of_birth",
+  "wam",
+  "shoe_size")
+colnames(x) = new_names
+
+```
+
+##### **Data Cleaning Justification:**
+
+The necessary libraries, including `tidyverse`, `janitor`, and `readxl`, were imported from CRAN (the Comprehensive R Archive Network) to facilitate the cleaning and manipulation of the dataset ([CRAN, 2024](https://cran.r-project.org/ "The Comprehensive R Archive Network")). *This code was taken from the assignment data cleaning report ([DATA2002, 2024](https://pages.github.sydney.edu.au/DATA2002/2024/assignment/assignment_data.html))*
+
+-   **Readability**: The new names, such as `target_grade` and `fluent_languages`, are more intuitive and descriptive, making it easier to interpret the dataset ([GeeksforGeeks, 2024)](https://www.geeksforgeeks.org/data-cleaning-in-r/. "Data Cleaning in R."). This also improves workflow.
+
+-   **Consistency**: Using a uniform format (e.g., snake_case) ensures consistency across the dataset, reducing errors and making the data easier to work with ([RStudio, 2024](https://rstudio.github.io/cheatsheets/html/data-visualization.html. "Data Visualization with ggplot2 Cheat Sheet.")).
+
+-   **Reduced Ambiguity**: The new names, like `weekly_paid_work_hours` and `wam`, accurately represent the variables, minimizing confusion.
+
+##### **Data and Cleaning - Social Media**
+
+```{r,message=FALSE, warning=FALSE}
+library(dplyr)
+
+x= x |> mutate(
+  social_media_clean = tolower(social_media),
+  social_media_clean = str_replace_all(social_media_clean, '[[:punct:]]',' '),
+  social_media_clean = stringr::word(social_media_clean),
+  social_media_clean = case_when(
+    stringr::str_starts(social_media_clean,"in") ~ "instagram",
+    stringr::str_starts(social_media_clean,"ig") ~ "instagram",
+    stringr::str_starts(social_media_clean,"tik") ~ "tiktok",
+    stringr::str_starts(social_media_clean,"we") ~ "wechat",
+    stringr::str_starts(social_media_clean,"twi") ~ "twitter",
+    stringr::str_starts(social_media_clean,"x") ~ "twitter",
+    stringr::str_starts(social_media_clean,"mess") ~ "facebook",
+    stringr::str_starts(social_media_clean,"bil") ~ "bilibili",
+    is.na(social_media_clean) ~ "none",
+    TRUE ~ social_media_clean
+  ),
+  social_media_clean = tools::toTitleCase(social_media_clean),
+  social_media_clean = forcats::fct_lump_min(social_media_clean, min = 10)
+)
+
+x |> janitor::tabyl(social_media_clean) |> 
+  arrange(desc(n)) |> 
+  gt::gt() |> 
+  gt::fmt_percent(columns = 3, decimals = 1) |> 
+  gt::cols_label(social_media_clean = "Favourite social media platform") |> 
+  gt::cols_align(align = "left", columns = 1)
+
+
+```
+
+##### **Data Cleaning Justification:**
+
+-   **Standardizing Social Media Names**: Variations in platform names (e.g., "ig" for Instagram) were standardized to ensure consistency across responses. This assumption was made to ensure that minor variations in how students reported social media platforms (e.g., "ig" for Instagram) would not introduce unnecessary noise or inconsistencies into the dataset. reduces ambiguity and improves the accuracy of the analysis ([GeeksforGeeks, 2024)](https://www.geeksforgeeks.org/data-cleaning-in-r/. "Data Cleaning in R.").
+
+-   **Handling Low-Frequency Platforms**: Platforms with low response rates were grouped under "Other" to focus the analysis on the most popular platforms without losing the overall picture. we made the assumption that platforms with less than 0.3% representation should be grouped under "Other." Without this grouping, the model would have been skewed by a large number of outliers, which could have introduced noise and reduced the appropriateness of our statistical tests.
+
+-   **Removing Punctuation**: Punctuation was removed from entries to avoid inconsistencies that could arise from minor differences in user input.This assumption was made to ensure that minor differences in punctuation wouldn’t create inconsistencies in the data. By removing punctuation, we treat entries with the same meaning as identical, this helps prevent errors or biases in the analysis caused by variations in how users input their responses.
+
+-   **`dplyr`**: Used for efficient data manipulation (e.g., filtering, mutating, summarizing) with a readable syntax, simplifying data wrangling tasks ([Wickham et al., 2019)](https://CRAN.R-project.org/package=dplyr.).
+
+##### **Data Cleaning - work and study**
+
+```{r,message=FALSE, warning=FALSE}
+#Data and Cleaning
+library(dplyr)
+library(gt)
+library(ggplot2)
+
+x_clean <- x |> 
+  mutate(
+    work_status_clean = case_when(
+      str_detect(work_status, "Casual|Contractor|Full time|Part time|Self employed") ~ "Works",
+      str_detect(work_status, "I don't currently work|NA") ~ "Does Not Work",
+      TRUE ~ "Other"
+    ),
+    weekly_study_hours_clean = case_when(
+      weekly_study_hours < 0 ~ NA_real_,  
+      TRUE ~ weekly_study_hours 
+    )
+  )
+
+x_clean <- x_clean |> filter(!is.na(weekly_study_hours_clean))
+
+x_filtered <- x_clean |> filter(work_status_clean %in% c("Works", "Does Not Work"))
+
+
+```
+
+##### **Data Cleaning Justification:**
+
+-   **Standardizing Work Status**: Work-related categories such as "Casual", "Part time", and "Self-employed" were grouped into a single "Works" category, while non-working students were grouped under "Does Not Work". This simplifies the analysis by focusing on the key distinction between working and non-working students.
+
+-   **Handling Negative Study Hours**: Negative study hours were set to NA because they are invalid and unrealistic. This assumption ensures that only valid data is considered, avoiding skewed or false results.
+
+-   **Filtering Missing Values**: Excluding rows with missing or invalid data maintains the integrity of the dataset and prevents biased results. This assumption ensures the analysis is purely based on complete and reliable data.
+
+-   **`dplyr`**: Used for efficient data manipulation (e.g., filtering, mutating, summarizing) with a readable syntax, simplifying data wrangling tasks ([Wickham et al., 2019)](https://CRAN.R-project.org/package=dplyr.).
+
+-   **`gt`**: Used to create publication-ready tables, improving the presentation and clarity of summary statistics and cleaned data ([Iannone et al., 2023](https://CRAN.R-project.org/package=gt.)).
+
+-   **`ggplot2`**: Used for flexible data visualization, enabling the creation of high-quality plots for clear communication of insights ([Wickham, 2016)](https://CRAN.R-project.org/package=gt.).
+
+##### **Data and Cleaning - Fluent language and WAM**
+
+```{r, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(stringr)
+
+x_clean <- x %>%
+  mutate(
+    fluent_languages_clean = as.character(fluent_languages),  
+    fluent_languages_clean = str_replace_all(fluent_languages_clean, '[[:punct:]]', ' '),  
+    fluent_languages_clean = stringr::word(fluent_languages_clean), 
+    fluent_languages_clean = case_when(
+      fluent_languages_clean == "one" | fluent_languages_clean == "1" ~ "1",
+      fluent_languages_clean == "two" | fluent_languages_clean == "2" ~ "2",
+      fluent_languages_clean == "three" | fluent_languages_clean == "3" ~ "3",
+      fluent_languages_clean == "four" | fluent_languages_clean == "4" ~ "4",
+      fluent_languages_clean == "five" | fluent_languages_clean == "5" ~ "5",
+      fluent_languages_clean == "six" | fluent_languages_clean == "6" ~ "6",
+      TRUE ~ NA_character_  
+    ),
+    fluent_languages_clean = as.numeric(fluent_languages_clean), 
+    fluent_languages_clean = ifelse(fluent_languages_clean > 6, NA, fluent_languages_clean),  
+    
+    wam_clean = as.character(wam),  
+    wam_clean = str_replace_all(wam_clean, '[^0-9.]', ''),  
+    wam_clean = as.numeric(wam_clean),  
+    wam_clean = ifelse(wam_clean < 0 | wam_clean > 100, NA, wam_clean)  
+  ) %>%
+  
+  filter(!is.na(fluent_languages_clean), !is.na(wam_clean))
+
+x_clean |> 
+  janitor::tabyl(fluent_languages_clean) |> 
+  arrange(desc(n)) |> 
+  gt::gt() |> 
+  gt::fmt_percent(columns = 3, decimals = 1) |> 
+  gt::cols_label(fluent_languages_clean = "Number of Fluent Languages") |> 
+  gt::cols_align(align = "left", columns = 1)
+
+x_clean |> 
+  janitor::tabyl(wam_clean) |> 
+  arrange(desc(n)) |> 
+  gt::gt() |> 
+  gt::fmt_percent(columns = 3, decimals = 1) |> 
+  gt::cols_label(wam_clean = "WAM") |> 
+  gt::cols_align(align = "left", columns = 1)
+
+
+```
+
+##### **Data Cleaning Justification:**
+
+-   **Standardizing Fluent Languages**: We converted text values like "one" into numeric values "1" and excluded entries above six, as they were likely outliers. Outliers can deform the statistical measures, such as means and standard deviations, leading to less accurate interpretations, hence why removing them improves the overall quality of the analysis. This further ensures consistency and avoids ambiguity in the analysis.
+
+-   **Cleaning WAM**: Non-numeric characters were removed, and values outside the valid range (0-100) were set to NA. Removing invalid WAM entries controls potential bias introduced by incorrect or extreme values. This action allows the analysis to reflect the true distribution of student performance, as well as improve accuracy.
+
+-   **Handling Missing Data**: Rows with missing or invalid values for key variables were excluded to maintain the integrity of the dataset and ensure a robust analysis.
+
+-   **`dplyr`**: Used for efficient data manipulation (e.g., filtering, mutating, summarizing) with a readable syntax, simplifying data wrangling tasks ([Wickham et al., 2019)](https://CRAN.R-project.org/package=dplyr.).
+
+-   **`stringr`**: Used for efficient string manipulation (e.g., pattern matching, replacing, and splitting) to clean and standardize text data in the dataset, enhancing data consistency ([Wickham, 2019](https://CRAN.R-project.org/package=stringr)).
+
+# Specific Hypothesis Tests
+
+### Module 1: Chi-Square Goodness of Fit Test for Favorite Social Media Platform
+
+#### *Question: Is the distribution of favorite social media platforms in this cohort significantly different from an expected uniform distribution?*
+
+The Chi-Square test helps us determine whether students show clear preferences for specific social media platforms, or if their choices are random. This is important for understanding where students are most engaged, which can inform how to reach them effectively.
+
+#### Hypotheses
+
+-   **Null Hypothesis (**$H_0$): The distribution of favorite social media platforms follows a uniform distribution. In other words, each platform is equally favored by the students.
+-   **Alternative Hypothesis (**$H_1$): The distribution of favorite social media platforms does not follow a uniform distribution. This suggests that students prefer certain platforms over others.
+
+#### Assumptions
+
+-   **Assumptions**: The chi-square goodness of fit test assumes that the data consists of independent categorical responses. Additionally, the expected frequencies for each category should be sufficiently large (generally $\geq 5$).
+
+```{r, message=FALSE, warning=FALSE}
+
+observed_frequencies <- table(x$social_media_clean)
+
+observed_frequencies <- observed_frequencies[observed_frequencies > 0]
+
+
+k <- length(observed_frequencies) 
+expected_frequencies <- rep(sum(observed_frequencies) / k, k)
+
+chi_square_test <- chisq.test(observed_frequencies, p = rep(1/k, k))
+
+```
+
+#### Test Statistic
+
+We performed a chi-square goodness of fit test to compare the observed frequencies of favorite social media platforms with the expected frequencies under a uniform distribution. The test statistic is calculated as:
+
+$$
+\chi^2 = \sum \frac{(O_i - E_i)^2}{E_i}
+$$
+
+Where $O_i$ is the observed frequency and $E_i$ is the expected frequency for each category (social media platform).
+
+#### Observed Test Statistic:
+
+-   The observed chi-square test statistic is:
+
+$$
+\chi^2 = 287.18
+$$
+
+#### p-Value:
+
+-   The p-value associated with the chi-square test is:
+
+$$
+p < 2.2 \times 10^{-16}
+$$
+
+#### Decision:
+
+-   The p-value for the Chi-Square test was less than 0.001, i.e. p-value \< 2.2 × 10⁻¹⁶ . which means p-value is less than our significance level (α = 0.05), we reject the null hypothesis that students' social media preferences are uniformly distributed.
+
+-   The observed test statistic was 287.18, which is large enough to indicate a significant difference from the expected uniform distribution.
+
+#### Graphical Representation
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+data <- data.frame(
+  Platform = names(observed_frequencies),
+  Observed = as.vector(observed_frequencies),
+  Expected = expected_frequencies
+)
+
+ggplot(data, aes(x = Platform)) +
+  geom_bar(aes(y = Observed), stat = "identity", fill = "steelblue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Observed vs. Expected Frequencies of Favorite Social Media Platforms",
+       y = "Frequency",
+       x = "Social Media Platform") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
+***Figure 1**: Observed vs. Expected Frequencies of Favorite Social Media Platforms.*
+
+#### Limitations
+
+-   **Representation**: Some platforms may be under- or over-represented in the dataset due to cultural or demographic biases within the cohort. Limiting the generalizability of the findings to the wider student population.
+-   **Assumptions**: The test assumes independence of responses and sufficiently large sample sizes for each category. Deviations from these assumptions could influence the validity of the results.
+
+### Module 2 : Wilcoxon Rank-Sum
+
+#### *Question: Does working (in any capacity) affect how many hours students spend studying each week?*
+
+The Wilcoxon Rank-Sum Test helps us determine if there’s a significant difference in study hours between students who work and those who don’t. This test provides insight into whether work impacts students’ ability to manage their academic workload effectively.
+
+#### Hypotheses
+
+-   **Null Hypothesis (**$H_0$) - $\mu_x = \mu_y$ : The distribution of weekly study hours is the same for students who work and those who do not work.
+
+-   **Alternative Hypothesis (**$H_1$) - $\mu_x > \mu_y$, $\mu_x < \mu_y$, $\mu_x \neq \mu_y$: The distribution of weekly study hours is different for students who work compared to those who do not work.
+
+#### Test Statistic:
+
+```{r, message=FALSE, warning=FALSE}
+
+wilcox_test_result <- wilcox.test(weekly_study_hours_clean ~ work_status_clean, data = x_filtered)
+
+
+```
+
+#### Observed Test Statistic:
+
+$$
+    w = r_1 + r_2 + \dots + r_{n_x}
+    $$
+
+-   The observed Wilcoxon test statistic is: W = 12414
+
+#### p-value:
+
+$$
+    P(W \geq w) \text{ for } H_1: \mu_x > \mu_y \text{ or } P(W \leq w) \text{ for } H_1: \mu_x < \mu_y \text{ or }
+    $$
+
+-   The p-value associated with the Wilcoxon Rank-Sum Test is: p = 0.01461
+
+#### Decision:
+
+-   Since the p-value of 0.01461 is less than the significance level of α=0.05, we reject the null hypothesis.
+-   This means that there is a significant difference in weekly study hours between students who work and those who do not work.
+
+#### Graphical Representation
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+
+ggplot(x_filtered, aes(x = work_status_clean, y = weekly_study_hours_clean)) +
+  geom_boxplot(fill = c("#69b3a2", "#404080"), color = "black", outlier.color = "red", outlier.shape = 19) +
+  geom_jitter(width = 0.2, alpha = 0.6, color = "gray30") + 
+  stat_summary(fun=mean, geom="point", shape=18, size=3, color="blue", fill="blue") + 
+  scale_y_continuous(limits = c(0, 100)) +  
+  labs(title = "Weekly Study Hours by Work Status", 
+       x = "Work Status", 
+       y = "Weekly Study Hours",
+       caption = "Figure 2: Boxplot of Weekly Study Hours by Work Status - Blue dots represent the group means") +
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5), 
+    axis.title = element_text(size = 14),  
+    axis.text = element_text(size = 12),  
+    plot.caption = element_text(size = 10, face = "italic", hjust = 1)  
+  )
+
+```
+
+***Figure 2**, shows that working students exhibit more variability in study hours, with a few outliers. The mean study hours (indicated by blue dots) suggest that working students may face irregular schedules due to additional responsibilities.*
+
+```{r, message=FALSE, warning=FALSE}
+
+x_filtered <- x_filtered %>%
+    mutate(weekly_study_hours_clean = ifelse(weekly_study_hours_clean > 100, 100, weekly_study_hours_clean))
+
+ggplot(x_filtered, aes(x = weekly_study_hours_clean, fill = work_status_clean)) +
+    geom_density(alpha = 0.5) +
+    labs(title = "Density Plot of Weekly Study Hours by Work Status",
+         x = "Weekly Study Hours", y = "Density",
+         fill = "Work Status") +
+    theme_minimal()
+ 
+
+
+```
+
+***Figure 3**: The Wilcoxon Rank-Sum Test assumes independent samples, continuous data, and similar distributions between the groups. Study hours are continuous, so the second assumption is satisfied. The density plot shows reasonably similar distributions of study hours between the two groups.*
+
+#### Limitations
+
+-   **Assumptions**: The Wilcoxon Rank-Sum Test assumes that the distributions of the two groups are similar in shape, though not necessarily normally distributed.
+-   **Sample Size**: The study might not have a balanced number of respondents between working and non-working students, which could affect the robustness of the results.
+-   **Other Factors**: Weekly study hours may also be influenced by other factors such as extracurricular activities, study habits, and personal schedules .i.e gym.
+
+### Module 3: Permutation Test for the Association Between Fluent Languages and WAM
+
+#### *Question: Is the number of languages spoken fluently associated with a higher WAM?*
+
+A permutation test is used to see if an observed relationship between two variables is stronger than what expected by chance. We used the permutation test to check if speaking multiple languages is linked to higher academic performance (WAM). This test helps ensure that any connection between these two factors isn’t just random but reflects a real trend in the data, hence why provides greater confidence in our findings regarding the influence of multilingualism on academic outcomes([Wilber, J, 2019](https://www.jwilber.me/permutationtest/)).
+
+#### Hypotheses
+
+-   **Null Hypothesis** ($H_0$) There is no association between the number of languages spoken fluently and WAM. Any observed difference is due to random chance.
+
+-   **Alternative Hypothesis** ($H_1$): There is a significant association between the number of languages spoken fluently and WAM.
+
+#### Assumptions
+
+-   The permutation test assumes that the observations are independent and that the number of fluent languages and WAM are measured accurately ([Wilber, J, 2019](https://www.jwilber.me/permutationtest/)). This test does not make any assumptions about the distribution of the data.
+
+```{r seed-example, message=FALSE, warning=FALSE}
+library(dplyr)
+
+observed_corr <- cor(x_clean$fluent_languages_clean, x_clean$wam_clean, method = "pearson")
+
+n_permutations <- 10000
+
+set.seed(123) 
+permute_corr <- function() {
+  shuffled_languages <- sample(x_clean$fluent_languages_clean)
+  cor(shuffled_languages, x_clean$wam_clean, method = "pearson")
+}
+
+perm_corrs <- replicate(n_permutations, permute_corr())
+
+
+p_value <- mean(abs(perm_corrs) >= abs(observed_corr))
+
+
+```
+
+#### Observed Test Statistic:
+
+The formula for the **Pearson correlation coefficient** $r$ is given by:
+
+$$
+r = \frac{\sum{(X_i - \bar{X})(Y_i - \bar{Y})}}{\sqrt{\sum{(X_i - \bar{X})^2} \sum{(Y_i - \bar{Y})^2}}}
+$$
+
+Where:
+
+\- $r$ is the **correlation coefficient**,
+
+\- $X_i$ and $Y_i$ are the individual data points for the number of fluent languages and WAM, respectively,
+
+\- $\bar{X}$ and $\bar{Y}$ are the means of the two variables,
+
+\- $\sum$ represents the summation over all data points.
+
+-   Observed Correlation (r) = -0.02441046
+
+#### p-value:
+
+$$
+p = P(|r_{\text{observed}}| \geq |r_{\text{perm}}|)
+$$
+
+Where:
+
+\- $p$ is the p-value,
+
+\- $r_{\text{observed}}$ is the observed correlation coefficient,
+
+\- $r_{\text{perm}}$ represents the distribution of correlations under the null hypothesis, generated via permutation.
+
+-   p-value = 0.6917
+
+#### Decision:
+
+-   The p-value of 0.69 means we fail to reject the null hypothesis. There is no significant relationship between the number of languages spoken fluently and WAM.
+
+#### Graphical Representation
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+perm_df <- data.frame(perm_corrs)
+
+ggplot(perm_df, aes(x = perm_corrs)) +
+  geom_histogram(binwidth = 0.01, fill = "steelblue", color = "black", alpha = 0.7) +
+  geom_vline(aes(xintercept = observed_corr), color = "red", linetype = "dashed", linewidth = 1) +  
+  theme_minimal() +
+  labs(title = "Permutation Test: Correlation Between Fluent Languages and WAM",
+       x = "Permuted Correlations",
+       y = "Frequency") +
+  annotate("text", x = observed_corr + 0.05, y = 500, label = paste("Observed Correlation: ", round(observed_corr, 4)),
+           color = "red", size = 3, hjust = 2)
+
+```
+
+***Figure 4**, shows the distribution of permuted correlations, with the red dashed line marking the observed correlation (r = -0.024). The observed value lies within the null distribution, indicating no significant association.*
+
+```{r, message=FALSE, warning=FALSE}
+
+perm_df <- data.frame(perm_corrs)
+
+ggplot(perm_df, aes(sample = perm_corrs)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_minimal() +
+  labs(title = "Q-Q Plot of Permuted Correlations",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles",
+       caption = "Figure 4: Q-Q Plot of Permuted Correlations")
+
+```
+
+***Figure 5** demonstrates that the permuted correlations closely follow the theoretical normal distribution, confirming the validity of the permutation test assumptions.*
+
+#### Limitations
+
+-   **Sample Size**: The test might be limited by the number of respondents who provided valid data for both fluent languages and WAM.
+-   **Self-Reporting**: The number of languages spoken fluently may be self-reported, leading to potential inaccuracies. Students may overestimate/ underestimate their proficiency in certain languages, leading to potential misclassification in the data.
+-   **Assumptions**: While the permutation test is flexible and does not suppose a specific distribution, this means it assumes that the observed correlation between fluent languages and WAM is indicative.
+
+# Discussion
+
+So what are influences that effect DATA2X02 students behaviours and performance? This study aims to investigate how students behaviours and characteristics, such as social media platform preferences, employment status, and multilingualism, correlate to academic performance. The judgement made from the statistical tests yield consequential insights into these factors, nevertheless they also centralize several intricacies and limitations considered.
+
+#### **Key Findings**
+
+-   The Chi-Square Goodness of Fit Test divulged a significant preference for specific social media platforms among students. This illustrates that the distribution of favourite social media platforms is far from random, seen through the data of platforms like Discord and Bilibili being vastly less popular. In response to the question, **"Is the distribution of favorite social media platforms in this cohort significantly different from an expected uniform distribution?"**, the results show that the observed distribution significantly differs from the expected uniform distribution, as illustrated in *Figure 1.* Hence, Instagram and TikTok are associated with high engagement, which may impact how students allocate their time for study, potentially influencing their academic performance.
+
+-   The Wilcoxon Rank-Sum Test yielded a p-value of 0.014, indicating that there is a significant difference in weekly study hours between students who work and those who do not. This suggests that working students, on average, have more variability in their study schedules. In response to the question, **"Does working (in any capacity) affect how many hours students spend studying each week?"**, the results *(figure 2 and 3)* display that working does impact study hours, with working students potentially struggling to maintain consistent study habits due to additional responsibilities. Hence, this suggests that work commitments may limit study time, potentially affecting their academic outcomes.
+
+-   The permutation test revealed no significant association between the number of languages spoken fluently and WAM. Therefore, in response to the question, **"Is the number of languages spoken fluently associated with a higher WAM?"**. This suggests that while speaking multiple languages may enhance certain cognitive abilities, it doesn’t necessarily translate into higher academic performance in this context.
+
+#### **Implications for University Programs**
+
+The findings present key opportunities for improving student engagement and academic success. For instance, the notable preference for platforms like Instagram and TikTok among students suggests that these platforms could be effectively leveraged for disseminating academic content, announcements, and events. By aligning communication strategies with students' preferred social media platforms, the university could enhance student engagement with academic resources and hence, campus initiatives.
+
+The significant impact of employment on study hours accents the need for support and tailored interventions, such as flexible deadlines, personalised time management workshops, and resources specifically structured for balancing work and study, could help mitigate the challenges faced by the individuals, also contribute to student well-being.
+
+Although no direct link was established between multilingualism and academic performance in this analysis, this does not diminish the broader benefits of linguistic diversity. The university could explore alternative ways to acknowledge and support multilingual students, i.e. cultural exchange initiatives or classes specific to the language which can advance cognitive skills, even if they do not diametrically correlate with higher academic performance (WAM).
+
+#### **Future Research**
+
+Future research should be designed to mitigate limitations evaluated during testing by conducting larger, more randomized samples that better capture the diversity of the student body. Objective measures of key variables—such as proficiency tests for language skills or time-tracking apps for study hours—could also provide veracious data. Correspondingly, exploring potential indirect relationships, such as how social media usage or employment affects broader academic behaviours, could yield more profound insights. Further studies could likewise examine the nuanced challenges faced by working students in greater detail, potentially disaggregating the analysis by type of employment or the number of working hours to identify more distinguishing patterns.
+
+# Conclusion
+
+Overall, this report provides actionable insights into the behavior and academic performance of DATA2X02 students, that can inform university programs and communication strategies. By understanding students’ social media preferences and the challenges faced by working students, the university can tailor its support and resources to fulfill the requirements of diverse student groups and ultimately improve student outcomes.
+
+# References:
+
+-   University of Sydney. 2024. *Data Visualization 2.1*. <https://www.maths.usyd.edu.au/u/UG/SM/STAT3022/r/current/Misc/data-visualization-2.1.pdf.>
+-   Comprehensive R Archive Network (CRAN). (2024). *Comprehensive R Archive Network*. Retrieved from <https://cran.r-project.org>.
+-   **Kassambara, Alboukadel**. 2023. *ggpubr: 'ggplot2' Based Publication Ready Plots*. <https://rpkgs.datanovia.com/ggpubr/>.
+-   DATA2002. 2024. *High Distinction Report Example*. <https://pages.github.sydney.edu.au/DATA2002/2024/assignment/report_hd.html>.
+-   DATA2002. 2024. *Assignment Dataset*. <https://pages.github.sydney.edu.au/DATA2002/2024/assignment/assignment_data.html>.
+-   RStudio. 2024. *Data Visualization with ggplot2 Cheat Sheet*. <https://rstudio.github.io/cheatsheets/html/data-visualization.html>.
+-   Wilber, J. (2019). *Permutation Test: A Visual Explanation*. Retrieved from <https://www.jwilber.me/permutationtest/>
+-   GeeksforGeeks. 2024. *Data Cleaning in R*. <https://www.geeksforgeeks.org/data-cleaning-in-r/>.
+-   Little, R. J. A., & Rubin, D. B. (2019). *Statistical Analysis with Missing Data* (3rd ed.). Wiley.
+-   Wickham, H. (2020). *forcats: Tools for Working with Categorical Variables (Factors)*. R package version 0.5.0. <https://CRAN.R-project.org/package=forcats>
+-   Wickham, H., François, R., Henry, L., & Müller, K. (2019). *dplyr: A Grammar of Data Manipulation*. R package version 0.8.5. <https://CRAN.R-project.org/package=dplyr>
+-   Iannone, R., Cheng, J., & Schloerke, B. (2023). *gt: Easily Create Presentation-Ready Display Tables*. R package version 0.8.0. Retrieved from <https://CRAN.R-project.org/package=gt.>
